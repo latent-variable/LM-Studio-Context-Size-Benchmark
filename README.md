@@ -1,22 +1,20 @@
 # LM Studio Context Size Benchmark
 
-A comprehensive benchmarking tool for measuring LM Studio model performance across different context sizes. Features accurate timing measurements, smart experiment management, and detailed logging.
+Measure LM Studio model performance across different prompt lengths without re-running finished experiments. The toolkit wraps realistic prompt generation, streaming-based timing, incremental result storage, and charting utilities so you can focus on the hardware and model comparisons that matter.
 
 ## 🚀 Features
 
-- **Accurate Timing**: Advanced timing system that excludes model loading time and provides reliable measurements
-- **Smart Benchmarking**: Only runs missing experiments, reusing existing results for efficiency
-- **Comprehensive Logging**: Detailed logs of every step with timestamps and performance metrics
-- **Realistic Prompts**: Uses book content for realistic agentic coding simulation
-- **Multiple Models**: Test multiple models simultaneously with configurable parameters
-- **Performance Charts**: Automatic generation of performance comparison charts
-- **Incremental Results**: Results saved incrementally with organized timestamped directories
+- **Streaming Timing** – separates warmup, time-to-first-token, and generation duration using the chat-completions stream.
+- **Smart Retry** – scans existing CSVs and only executes missing `(model, context)` combinations, saving new rows as soon as they arrive.
+- **Concise Prompts** – slices book content to the desired token budget and asks for constrained bullet-point analyses to keep completions short and comparable.
+- **Detailed Logging** – structured console/file logging with emoji callouts for requests, responses, and errors.
+- **One-Click Charts** – regenerate PNG comparison plots and plain-text summaries from any results folder.
 
 ## 📋 Requirements
 
 - Python 3.8+
-- LM Studio running locally
-- PDF book file for realistic prompts
+- LM Studio running locally with the HTTP API enabled (defaults to `http://localhost:5002`)
+- A PDF (or fallback text) in `books/` for prompt material
 
 ## 🛠️ Installation
 
@@ -33,16 +31,16 @@ A comprehensive benchmarking tool for measuring LM Studio model performance acro
 
 3. **Setup LM Studio:**
    - Start LM Studio
-   - Load your desired models
-   - Ensure the API server is running (default: http://localhost:5002)
+   - Load the models you want to benchmark
+   - Ensure the API server is running (default: `http://localhost:5002`)
 
 4. **Add a book file:**
-   - Place a PDF book in the `books/` directory (e.g., `books/your_book.pdf`)
-   - Update `config.yaml` to point to your book file
+   - Place a PDF in `books/` (e.g., `books/harrypotter.pdf`)
+   - Update `config.yaml` → `content.book_path` if you use a different file
 
 5. **Configure the benchmark:**
-   - Copy and customize `config.yaml` for your setup
-   - Set your models, context sizes, and system information
+   - Edit `config.yaml` to choose models, context sizes, delays, and output options
+   - Run `python config_loader.py` for a quick validation/summary
 
 ## 🎯 Usage
 
@@ -53,27 +51,26 @@ python smart_benchmark.py
 
 ### Main Scripts
 
-- **`smart_benchmark.py`** - Main benchmark runner with accurate timing and smart experiment management
-- **`create_final_charts.py`** - Generate comparison charts from results
-- **`list_results.py`** - List and analyze existing benchmark results
-- **`setup.py`** - Setup and validation helper
+- `smart_benchmark.py` — end-to-end benchmark runner with incremental saves
+- `create_final_charts.py` — rebuild comparison plots/summary for existing results
+- `list_results.py` — enumerate stored runs and dump detailed metrics
+- `setup.py` — optional helper that installs deps and sanity-checks configuration
 
 ### Configuration
 
-Edit `config.yaml` to customize:
+Edit `config.yaml` to customise the run. Default structure:
 
 ```yaml
-# API Configuration
 api:
   url: "http://localhost:5002"
   timeout: 600
+  delay_between_requests: 2
+  delay_between_models: 10
 
-# System Information
 system:
   name: "M3 Max MacBook Pro 128GB RAM"
-  notes: "4-bit quantization, 8-bit KV cache"
+  notes: "4-bit quantization, 8-bit KV-Cache"
 
-# Models to Test
 models:
   - name: "qwen/qwen3-next-80b"
     enabled: true
@@ -81,55 +78,72 @@ models:
   - name: "openai/gpt-oss-20b"
     enabled: true
     description: "GPT-OSS 20B"
+  - name: "openai/gpt-oss-120b"
+    enabled: true
+    description: "GPT-OSS 120B"
 
-# Test Parameters
 test:
-  context_sizes: [10000, 20000, 30000, 40000, 50000]
-  max_tokens: 100
+  context_sizes: [1000, 10000, 20000]
+  max_tokens: 512            # 0 = unlimited
   temperature: 0.1
-  delay_between_requests: 2
-  delay_between_models: 5
 
-# Content Settings
 content:
-  book_path: "books/your_book.pdf"
+  book_path: "books/harrypotter.pdf"
+  prompt_types:
+    - literary_analysis
+    - creative_writing_feedback
+    - editorial_review
+    - lecture_preparation
+    - adaptation_analysis
 
-# Output Settings
 output:
   results_dir: "results"
   create_charts: true
   save_summary: true
+
+charts:
+  dpi: 300
+  figure_size: [16, 8]
+  colors:
+    "qwen/qwen3-next-80b": "#d62728"
+    "openai/gpt-oss-20b": "#ff7f0e"
+    "openai/gpt-oss-120b": "#2ca02c"
+    "default": "#1f77b4"
 ```
 
 ## 📊 Output Structure
 
+By default all results live in the `results/` folder:
+
 ```
 results/
-├── run_20250919_143022/          # Timestamped run directory
-│   ├── benchmark.log             # Detailed execution logs
-│   ├── qwen_qwen3_next_80b_results.csv
-│   ├── openai_gpt_oss_20b_results.csv
-│   ├── performance_charts.png    # Performance comparison charts
-│   └── run_summary.txt          # Run summary and analysis
-└── run_20250919_151045/         # Another run
-    └── ...
+├── benchmark.log
+├── qwen_qwen3_next_80b_results.csv
+├── openai_gpt_oss_20b_results.csv
+├── openai_gpt_oss_120b_results.csv
+├── benchmark_comparison_charts.png
+└── benchmark_summary.txt
 ```
+
+- CSV files contain one row per `(model, context_size)` and are de-duplicated on write.
+- `benchmark.log` mirrors the console output at DEBUG level.
+- Running `create_final_charts.py` regenerates the chart/summary at any time.
 
 ## 🧠 How It Works
 
-### Accurate Timing System
+### Timing Workflow
 
-1. **Model Warmup**: Performs warmup requests to ensure the model is loaded
-2. **Multiple Measurements**: Takes multiple measurements to detect inconsistencies
-3. **Loading Detection**: Identifies and filters out measurements that include model loading time
-4. **Smart Selection**: Selects the most consistent measurement representing actual performance
+1. Optional warmup request ensures the model is resident before the first measurement.
+2. Streaming chat completion captures time-to-first-token and generation duration precisely.
+3. A lightweight non-streaming probe retrieves usage token counts when available.
+4. Fallback token estimation uses `tiktoken` for approximate counts when the API omits usage data.
 
 ### Smart Benchmarking
 
-1. **Existing Results Scan**: Scans all previous runs for existing data
-2. **Missing Work Identification**: Determines which experiments are missing
-3. **Selective Execution**: Only runs the missing experiments
-4. **Result Combination**: Merges new and existing results for comprehensive analysis
+1. Scan existing CSVs in `results/`.
+2. Compute missing context sizes for each enabled model.
+3. Execute only the gaps, saving each measurement immediately.
+4. Merge new data with old when generating charts and summaries.
 
 ### Realistic Prompts
 
@@ -137,13 +151,14 @@ results/
 - Simulates agentic coding scenarios with analysis prompts
 - Provides consistent, reproducible test conditions
 
-## 📈 Metrics Measured
+## 📈 Metrics Reported
 
-- **Time to First Token (TTFT)**: Prompt processing time
-- **Generation Speed**: Tokens per second during generation
-- **Prompt Processing Speed**: Tokens per second for prompt processing
-- **Total Time**: Complete request duration
-- **Token Counts**: Accurate prompt and completion token counts
+- **Time to First Token (TTFT)** — seconds from request to first streamed token
+- **Generation Time** — total seconds spent streaming tokens
+- **Tokens per Second** — completion tokens divided by generation time (approximate if usage data missing)
+- **Prompt Processing Speed** — prompt tokens divided by TTFT
+- **Total Time** — wall-clock duration of the request
+- **Prompt / Completion Tokens** — usage-based when available, otherwise estimated with tokenizer fallback
 
 ## 🔧 Advanced Features
 
@@ -165,27 +180,23 @@ Every operation is logged with:
 
 ### Performance Analysis
 
-- Automatic chart generation
-- Performance degradation analysis
-- Statistical consistency checking
-- Comparative model analysis
+- Generate combined charts for generation speed and prompt ingestion.
+- Emit a plain-text summary with per-model ranges and context coverage.
+- Review the CSVs directly for integration into your own dashboards.
 
-## 📁 Files
+## 📁 Key Files
 
-- **`smart_benchmark.py`** - Main smart benchmark runner
-- **`accurate_timing.py`** - Advanced timing measurement system
-- **`logger.py`** - Comprehensive logging system
-- **`benchmark.py`** - Core benchmarking logic
-- **`book_loader.py`** - PDF book loading and chunking
-- **`config_loader.py`** - Configuration management
-- **`create_final_charts.py`** - Chart generation
-- **`multi_model_benchmark.py`** - Legacy multi-model runner
-- **`list_results.py`** - Results analysis utility
-- **`setup.py`** - Setup and validation helper
-- **`config.yaml`** - Main configuration file
-- **`requirements.txt`** - Python dependencies
-- **`books/`** - Directory for book content
-- **`results/`** - Directory for benchmark results
+- `smart_benchmark.py` — smart benchmark runner
+- `accurate_timing.py` — streaming timing utilities
+- `book_loader.py` — PDF loader and prompt generator
+- `config_loader.py` — configuration IO/validation helpers
+- `create_final_charts.py` — chart/summary generator
+- `list_results.py` — CLI helper for inspecting CSVs
+- `setup.py` — optional bootstrapper
+- `config.yaml` — default configuration
+- `requirements.txt` — Python dependencies
+
+Source modules such as `logger.py` and `accurate_timing.py` are imported by the runner; there is no separate `benchmark.py` or `multi_model_benchmark.py` in this repo anymore.
 
 ## 🎨 Example Results
 
