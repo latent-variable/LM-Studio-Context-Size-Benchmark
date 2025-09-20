@@ -38,7 +38,7 @@ test:
   #   step: 10000
   
   # Number of completion tokens to generate for each test
-  max_tokens: 0
+  max_tokens: 512
   
   # Temperature for generation
   temperature: 0.1

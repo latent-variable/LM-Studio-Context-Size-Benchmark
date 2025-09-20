@@ -119,8 +119,14 @@ class BookChunkLoader:
         import random
         system_prompt = random.choice(system_prompts)
         
-        full_prompt = f"{system_prompt}\n\nText to analyze:\n\n{book_chunk}\n\nPlease provide your detailed analysis:"
-        
+        full_prompt = (
+            f"{system_prompt}\n\n"
+            "Provide a focused response with up to five bullet points, "
+            "each limited to two sentences. Keep the entire answer under "
+            "roughly 250 tokens and prioritise the most important insights.\n\n"
+            f"Text to analyze:\n\n{book_chunk}\n\nConcise analysis:"
+        )
+
         return full_prompt
     
     def get_token_count(self, text: str) -> int:
