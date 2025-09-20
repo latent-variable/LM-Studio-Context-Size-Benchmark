@@ -104,6 +104,7 @@ results/*
 !results/example_structure.txt
 !results/benchmark_comparison_charts.svg
 !results/benchmark_comparison_charts.png
+!results/*.csv
 
 # Temporary files
 *.tmp

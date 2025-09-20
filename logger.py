@@ -69,6 +69,10 @@ class BenchmarkLogger:
         self.logger.info(f"Max tokens: {max_tokens_display}")
         self.logger.info(f"Temperature: {config.temperature}")
         self.logger.info(f"Timeout: {config.api_timeout}s")
+        if config.token_multipliers:
+            self.logger.info("Token multipliers:")
+            for model_name, multiplier in config.token_multipliers.items():
+                self.logger.info(f"  {model_name}: {multiplier:.2f}")
         
         self.logger.info("Models to test:")
         for i, model in enumerate(config.models, 1):

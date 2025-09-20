@@ -2,11 +2,14 @@
 
 Measure LM Studio model performance across different prompt lengths without re-running finished experiments. The toolkit wraps realistic prompt generation, streaming-based timing, incremental result storage, and charting utilities so you can focus on the hardware and model comparisons that matter.
 
+![Benchmark overview](results/benchmark_comparison_charts.svg)
+
 ## 🚀 Features
 
 - **Streaming Timing** – separates warmup, time-to-first-token, and generation duration using the chat-completions stream.
 - **Smart Retry** – scans existing CSVs and only executes missing `(model, context)` combinations, saving new rows as soon as they arrive.
 - **Concise Prompts** – slices book content to the desired token budget and asks for constrained bullet-point analyses to keep completions short and comparable.
+- **Adaptive Chunking** – optional per-model multipliers keep prompt token counts aligned with each model's tokenizer.
 - **Detailed Logging** – structured console/file logging with emoji callouts for requests, responses, and errors.
 - **One-Click Charts** – regenerate PNG comparison plots and plain-text summaries from any results folder.
 
@@ -86,6 +89,10 @@ test:
   context_sizes: [1000, 10000, 20000]
   max_tokens: 512            # 0 = unlimited
   temperature: 0.1
+  token_multipliers:
+    "qwen/qwen3-next-80b": 1.35
+    "openai/gpt-oss-20b": 1.10
+    "openai/gpt-oss-120b": 1.10
 
 content:
   book_path: "books/harrypotter.pdf"

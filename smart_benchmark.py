@@ -8,6 +8,7 @@ import os
 import glob
 import pandas as pd
 import time
+from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
 from dataclasses import dataclass
@@ -57,6 +58,10 @@ class SmartBenchmark:
         
         # Setup book loader
         self.book_loader = BookChunkLoader(self.config.book_path)
+        self.model_token_multipliers = defaultdict(lambda: 1.0)
+        for model_name, multiplier in self.config.token_multipliers.items():
+            if multiplier > 0:
+                self.model_token_multipliers[model_name] = multiplier
         
     def scan_existing_results(self) -> Dict[str, pd.DataFrame]:
         """Scan all existing result files and load data"""
@@ -158,8 +163,10 @@ class SmartBenchmark:
                 self.logger.log_info(f"🧪 Testing {model_name} @ {context_size:,} tokens")
                 
                 # Generate realistic prompt
+                multiplier = self.model_token_multipliers[model_name]
+                adjusted_tokens = max(1, int(context_size * multiplier))
                 prompt = self.book_loader.create_analysis_prompt(
-                    self.book_loader.get_chunk_by_tokens(context_size)
+                    self.book_loader.get_chunk_by_tokens(adjusted_tokens)
                 )
                 
                 self.logger.log_api_request(model_name, context_size, len(prompt.split()))
@@ -195,9 +202,17 @@ class SmartBenchmark:
                     
                     model_results.append(benchmark_result)
                     self.logger.log_api_response(model_name, context_size, result)
-                    
+
                     # Save incrementally
                     self.save_incremental_results(model_name, [benchmark_result])
+
+                    # Update model token multiplier for better approximation next time
+                    actual_prompt_tokens = result.get('prompt_tokens')
+                    if actual_prompt_tokens and actual_prompt_tokens > 0:
+                        ratio = context_size / actual_prompt_tokens
+                        ratio = max(0.5, min(2.0, ratio))
+                        current = self.model_token_multipliers[model_name]
+                        self.model_token_multipliers[model_name] = (current + ratio) / 2.0
                     
                 else:
                     self.logger.log_error(f"Failed to get result for {model_name} @ {context_size:,} tokens")
