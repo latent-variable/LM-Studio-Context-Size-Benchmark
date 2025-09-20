@@ -13,7 +13,7 @@ def list_results():
     
     if not results_dirs:
         print("📁 No benchmark results found.")
-        print("Run 'python multi_model_benchmark.py' to create your first benchmark.")
+        print("Run 'python smart_benchmark.py' to create your first benchmark.")
         return
     
     # Sort by timestamp (newest first)

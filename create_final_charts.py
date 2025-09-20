@@ -206,7 +206,7 @@ def main():
     if not results:
         print("❌ No benchmark results found!")
         print("Make sure to run the context size benchmark first:")
-        print("  python multi_model_benchmark.py")
+        print("  python smart_benchmark.py")
         return
     
     print(f"✅ Loaded results for {len(results)} models:")

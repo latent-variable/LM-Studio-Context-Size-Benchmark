@@ -140,7 +140,7 @@ def show_next_steps(all_checks_passed):
         print(f"1. Run a quick test:")
         print(f"   python config_loader.py")
         print(f"\n2. Start benchmarking:")
-        print(f"   python multi_model_benchmark.py")
+        print(f"   python smart_benchmark.py")
         print(f"\n3. View results:")
         print(f"   python list_results.py")
         print(f"\n4. Generate charts:")

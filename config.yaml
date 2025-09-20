@@ -28,8 +28,8 @@ models:
 
 # Test Configuration
 test:
-  # Context sizes to test (in tokens)
-  context_sizes: [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
+  # Context sizes to test (in tokens) - Quick experiment up to 20k
+  context_sizes: [10000, 20000]
   
   # Alternative: Use range instead of explicit list
   # context_range:
@@ -45,7 +45,7 @@ test:
 
 # Book content settings
 content:
-  book_path: "books/your_book.pdf"  # Change this to your book file
+  book_path: "books/harrypotter.pdf"  # Using Harry Potter for this experiment
   # Prompt types to use (random selection)
   prompt_types:
     - "literary_analysis"
