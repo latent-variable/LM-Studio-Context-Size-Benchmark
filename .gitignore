@@ -99,9 +99,11 @@ books/*.doc
 !books/.gitkeep
 
 # Results (exclude by default, users can add specific results if needed)
-results/
+results/*
 !results/.gitkeep
 !results/example_structure.txt
+!results/benchmark_comparison_charts.svg
+!results/benchmark_comparison_charts.png
 
 # Temporary files
 *.tmp
@@ -120,6 +122,8 @@ logs/
 *.svg
 !docs/*.png
 !docs/*.jpg
+!results/benchmark_comparison_charts.svg
+!results/benchmark_comparison_charts.png
 
 # Configuration backups
 config.yaml.bak

@@ -16,9 +16,10 @@ except ImportError:  # Optional dependency for token counting
 from logger import BenchmarkLogger
 
 class AccurateTiming:
-    def __init__(self, api_url: str, logger: BenchmarkLogger):
+    def __init__(self, api_url: str, logger: BenchmarkLogger, timeout: int = 60):
         self.api_url = api_url.rstrip('/')
         self.logger = logger
+        self.timeout = timeout if timeout and timeout > 0 else 60
         self._encoding = self._load_encoder()
         
     def simple_warmup(self, model_name: str) -> bool:
@@ -193,15 +194,15 @@ class AccurateTiming:
             "stream": False,
             "max_tokens": probe_tokens
         }
-        
+
         try:
             response = requests.post(
                 f"{self.api_url}/v1/chat/completions",
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=60
+                timeout=self.timeout
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 usage = result.get('usage', {})
@@ -213,7 +214,14 @@ class AccurateTiming:
             else:
                 self.logger.log_error(f"Token count request failed: {response.status_code}")
                 return None
-                
+
+        except requests.exceptions.Timeout:
+            self.logger.log_warning("Token count request timed out; falling back to estimated tokens")
+            return {
+                'prompt_tokens': self._estimate_token_count(prompt),
+                'completion_tokens': None,
+                'total_tokens': None
+            }
         except Exception as e:
             self.logger.log_error("Token count request failed", e)
             return None

@@ -117,17 +117,20 @@ By default all results live in the `results/` folder:
 
 ```
 results/
+├── .gitkeep
 ├── benchmark.log
-├── qwen_qwen3_next_80b_results.csv
+├── benchmark_summary.txt
+├── benchmark_comparison_charts.png
+├── benchmark_comparison_charts.svg
 ├── openai_gpt_oss_20b_results.csv
 ├── openai_gpt_oss_120b_results.csv
-├── benchmark_comparison_charts.png
-└── benchmark_summary.txt
+└── qwen_qwen3-next-80b_results.csv
 ```
 
 - CSV files contain one row per `(model, context_size)` and are de-duplicated on write.
 - `benchmark.log` mirrors the console output at DEBUG level.
 - Running `create_final_charts.py` regenerates the chart/summary at any time.
+- `benchmark_comparison_charts.png` / `.svg` are checked-in quick-look charts so you can preview results without re-running the plotting script.
 
 ## 🧠 How It Works
 
@@ -251,3 +254,4 @@ The benchmark uses a hybrid approach:
 - Enables incremental testing and model comparison
 
 This ensures efficient use of compute resources and enables iterative experimentation without redundant work.
+-![Benchmark chart](results/benchmark_comparison_charts.svg)

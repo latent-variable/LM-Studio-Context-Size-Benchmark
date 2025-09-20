@@ -53,7 +53,7 @@ class SmartBenchmark:
         self.logger.log_config(self.config)
         
         # Setup accurate timing
-        self.timing = AccurateTiming(self.config.api_url, self.logger)
+        self.timing = AccurateTiming(self.config.api_url, self.logger, timeout=self.config.api_timeout)
         
         # Setup book loader
         self.book_loader = BookChunkLoader(self.config.book_path)

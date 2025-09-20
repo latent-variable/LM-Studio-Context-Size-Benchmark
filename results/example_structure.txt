@@ -1,0 +1,35 @@
+Example Results Directory Structure:
+
+results/
+├── qwen_qwen3-next-80b_results.csv
+├── openai_gpt-oss-20b_results.csv
+├── openai_gpt-oss-120b_results.csv
+├── benchmark_comparison_charts.png
+├── benchmark_summary.txt
+├── benchmark.log
+└── example_structure.txt (this file)
+
+Benefits:
+- Single working directory approach - no timestamped folders
+- Clean, simple structure with one CSV per model
+- Each CSV is updated incrementally after every context size test
+- Smart benchmark only runs missing experiments
+- All results in one place for easy access
+- Charts and summaries updated with each run
+- Comprehensive logging in benchmark.log
+- No confusion from multiple result directories
+- Easy to understand and maintain
+
+File Details:
+- *_results.csv: Individual model performance data
+- benchmark_comparison_charts.png: Performance comparison charts
+- benchmark_summary.txt: Text summary of all results
+- benchmark.log: Detailed execution logs with timing info
+- example_structure.txt: This documentation file
+
+Smart Features:
+- Detects existing results and only runs missing tests
+- Combines new results with existing data seamlessly
+- Single measurement per test (fast execution)
+- Model warmup only once per model
+- Accurate timing that excludes model loading delays

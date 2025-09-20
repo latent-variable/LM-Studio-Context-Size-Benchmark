@@ -3,10 +3,16 @@
 Create comparison charts from context size benchmark results
 """
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import glob
 import os
+import glob
+
+import pandas as pd
+
+if os.environ.get('BENCHMARK_SHOW_CHARTS') != '1':
+    import matplotlib
+    matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 
 def load_all_model_results(results_dir=None):
     """Load results from all model CSV files"""
@@ -75,14 +81,13 @@ def create_comparison_charts(results, results_dir):
         'unsloth/gpt-oss-20b': '#ff7f0e',     # Orange (alternative name)
     }
     
-    # Create figure with subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+    # Create figure with stacked subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), sharex=True)
     fig.suptitle('LM Studio Benchmark - M3 Max MacBook Pro 128GB', fontsize=16, fontweight='bold')
     
     # Chart 1: Generation vs Context Size
-    ax1.set_title('Generation vs Context Size', fontsize=14, fontweight='bold')
-    ax1.set_xlabel('Context Size', fontsize=12)
-    ax1.set_ylabel('TPS (Generation)', fontsize=12)
+    ax1.set_title('Generation Speed vs Context Size', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('Completion TPS', fontsize=12)
     
     max_gen_speed = 0
     max_context = 0
@@ -134,9 +139,9 @@ def create_comparison_charts(results, results_dir):
         ax1.set_xticklabels([f'{t:,}' for t in ticks])
     
     # Chart 2: Prompt Processing vs Context Size  
-    ax2.set_title('Prompt Processing vs Context Size', fontsize=14, fontweight='bold')
-    ax2.set_xlabel('Context Size', fontsize=12)
-    ax2.set_ylabel('TPS (Prompt Processing)', fontsize=12)
+    ax2.set_title('Prompt Processing Speed vs Context Size', fontsize=14, fontweight='bold')
+    ax2.set_xlabel('Context Size (tokens)', fontsize=12)
+    ax2.set_ylabel('Prompt TPS', fontsize=12)
     
     max_prompt_speed = 0
     
@@ -181,15 +186,18 @@ def create_comparison_charts(results, results_dir):
     
     plt.tight_layout()
 
-    chart_path = os.path.join(results_dir, 'benchmark_comparison_charts.png')
-    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    chart_png = os.path.join(results_dir, 'benchmark_comparison_charts.png')
+    plt.savefig(chart_png, dpi=300, bbox_inches='tight')
+
+    chart_svg = os.path.join(results_dir, 'benchmark_comparison_charts.svg')
+    plt.savefig(chart_svg, dpi=300, bbox_inches='tight')
 
     if os.environ.get('BENCHMARK_SHOW_CHARTS') == '1':
         plt.show()
     else:
         plt.close(fig)
-    
-    print(f"📊 Benchmark results chart saved to: {chart_path}")
+
+    print(f"📊 Benchmark results chart saved to: {chart_png}")
     
     # Print performance summary
     print("\n" + "="*80)
