@@ -29,7 +29,7 @@ models:
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
-  context_sizes: [1000, 10000, 20000]
+  context_sizes: [1000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
   
   # Alternative: Use range instead of explicit list
   # context_range:

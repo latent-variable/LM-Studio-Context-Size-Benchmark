@@ -180,11 +180,14 @@ def create_comparison_charts(results, results_dir):
         ax2.set_xticklabels([f'{t:,}' for t in ticks])
     
     plt.tight_layout()
-    
-    # Save chart in the results directory
+
     chart_path = os.path.join(results_dir, 'benchmark_comparison_charts.png')
     plt.savefig(chart_path, dpi=300, bbox_inches='tight')
-    plt.show()
+
+    if os.environ.get('BENCHMARK_SHOW_CHARTS') == '1':
+        plt.show()
+    else:
+        plt.close(fig)
     
     print(f"📊 Benchmark results chart saved to: {chart_path}")
     
