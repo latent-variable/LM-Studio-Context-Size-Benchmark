@@ -1,0 +1,54 @@
+# Example configuration variations for different use cases
+
+# Example 1: Quick test with fewer context sizes
+quick_test:
+  test:
+    context_sizes: [10000, 30000, 50000]  # Just 3 sizes for quick testing
+    max_tokens: 50                        # Fewer tokens to generate
+  
+  models:
+    - name: "qwen/qwen3-next-80b"
+      enabled: true
+      description: "Quick test of Qwen model"
+
+# Example 2: High-resolution testing with more steps
+detailed_test:
+  test:
+    context_range:
+      start: 5000
+      end: 50000
+      step: 5000    # 5k increments for more granular data
+
+# Example 3: Custom API endpoint
+custom_api:
+  api:
+    url: "http://192.168.1.100:1234"  # Different server
+    timeout: 1200                     # Longer timeout for slower hardware
+
+# Example 4: Different system configuration
+different_system:
+  system:
+    name: "RTX 4090 Desktop 64GB RAM"
+    notes: "8-bit quantization, full precision KV-Cache"
+
+# Example 5: Test only specific models
+single_model_test:
+  models:
+    - name: "openai/gpt-oss-120b"
+      enabled: true
+      description: "Testing only the 120B model"
+    
+    - name: "qwen/qwen3-next-80b"
+      enabled: false                  # Disabled
+      description: "Skipping this model"
+
+# Example 6: Extended context testing
+extended_context:
+  test:
+    context_sizes: [10000, 25000, 50000, 75000, 100000, 125000, 150000]
+    max_tokens: 200                   # More tokens for longer responses
+
+# To use any of these configurations:
+# 1. Copy the relevant section to your config.yaml
+# 2. Merge with the base configuration structure
+# 3. Run python config_loader.py to validate

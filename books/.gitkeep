@@ -1,0 +1,3 @@
+# This file keeps the books directory in git while excluding the actual book files
+# Add your book files here (PDF, EPUB, TXT, etc.)
+# The .gitignore will prevent them from being committed
