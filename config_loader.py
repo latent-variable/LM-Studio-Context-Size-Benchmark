@@ -28,7 +28,6 @@ class BenchmarkConfig:
     context_sizes: List[int]
     max_tokens: int
     temperature: float
-    token_multipliers: Dict[str, float]
     
     # Content settings
     book_path: str
@@ -69,11 +68,6 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
     # Filter enabled models
     enabled_models = [model for model in config_data['models'] if model.get('enabled', True)]
     
-    token_multipliers = {
-        str(model_name): float(value)
-        for model_name, value in config_data['test'].get('token_multipliers', {}).items()
-    }
-
     return BenchmarkConfig(
         # API settings
         api_url=config_data['api']['url'],
@@ -92,7 +86,6 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
         context_sizes=context_sizes,
         max_tokens=config_data['test']['max_tokens'],
         temperature=config_data['test']['temperature'],
-        token_multipliers=token_multipliers,
         
         # Content settings
         book_path=config_data['content']['book_path'],
@@ -131,10 +124,6 @@ def print_config_summary(config: BenchmarkConfig):
     print(f"   Max tokens: {max_tokens_display}")
     print(f"   Temperature: {config.temperature}")
     print(f"   Timeout: {config.api_timeout}s")
-    if config.token_multipliers:
-        print(f"   Token multipliers:")
-        for name, value in config.token_multipliers.items():
-            print(f"      {name}: {value:.2f}")
     print()
 
 def validate_config(config: BenchmarkConfig) -> List[str]:
@@ -154,10 +143,6 @@ def validate_config(config: BenchmarkConfig) -> List[str]:
         issues.append("No context sizes specified")
     elif any(size < 0 for size in config.context_sizes):
         issues.append("Context sizes must be non-negative")
-
-    for model_name, multiplier in config.token_multipliers.items():
-        if multiplier <= 0:
-            issues.append(f"Token multiplier for {model_name} must be positive")
 
     # Check API URL format
     if not config.api_url.startswith(('http://', 'https://')):

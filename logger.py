@@ -69,10 +69,6 @@ class BenchmarkLogger:
         self.logger.info(f"Max tokens: {max_tokens_display}")
         self.logger.info(f"Temperature: {config.temperature}")
         self.logger.info(f"Timeout: {config.api_timeout}s")
-        if config.token_multipliers:
-            self.logger.info("Token multipliers:")
-            for model_name, multiplier in config.token_multipliers.items():
-                self.logger.info(f"  {model_name}: {multiplier:.2f}")
         
         self.logger.info("Models to test:")
         for i, model in enumerate(config.models, 1):
@@ -123,7 +119,7 @@ class BenchmarkLogger:
         """Log API request details"""
         self.logger.info(f"🌐 API REQUEST: {model_name}")
         self.logger.info(f"   Context size: {context_size:,} tokens")
-        self.logger.info(f"   Actual prompt tokens: {prompt_tokens:,}")
+        self.logger.info(f"   Estimated prompt tokens: {prompt_tokens:,}")
     
     def log_api_response(self, model_name, context_size, result):
         """Log API response details"""
