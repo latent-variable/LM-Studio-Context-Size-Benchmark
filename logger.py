@@ -65,7 +65,8 @@ class BenchmarkLogger:
         self.logger.info(f"Notes: {config.system_notes}")
         self.logger.info(f"Book: {config.book_path}")
         self.logger.info(f"Context sizes: {config.context_sizes}")
-        self.logger.info(f"Max tokens: {config.max_tokens}")
+        max_tokens_display = "Unlimited" if config.max_tokens <= 0 else config.max_tokens
+        self.logger.info(f"Max tokens: {max_tokens_display}")
         self.logger.info(f"Temperature: {config.temperature}")
         self.logger.info(f"Timeout: {config.api_timeout}s")
         

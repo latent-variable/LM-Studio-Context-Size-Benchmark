@@ -61,6 +61,7 @@ class BookChunkLoader:
     
     def get_chunk_by_tokens(self, target_tokens: int) -> str:
         """Get a chunk of book content with approximately target_tokens"""
+        target_tokens = max(0, target_tokens)
         if not self.book_text:
             return self._generate_fallback_content()[:target_tokens * 4]
         

@@ -120,7 +120,8 @@ def print_config_summary(config: BenchmarkConfig):
     print(f"   Steps: {config.context_sizes}")
     
     print(f"⚙️  Settings:")
-    print(f"   Max tokens: {config.max_tokens}")
+    max_tokens_display = "Unlimited" if config.max_tokens <= 0 else config.max_tokens
+    print(f"   Max tokens: {max_tokens_display}")
     print(f"   Temperature: {config.temperature}")
     print(f"   Timeout: {config.api_timeout}s")
     print()
@@ -140,8 +141,8 @@ def validate_config(config: BenchmarkConfig) -> List[str]:
     # Check context sizes
     if not config.context_sizes:
         issues.append("No context sizes specified")
-    elif any(size <= 0 for size in config.context_sizes):
-        issues.append("Context sizes must be positive")
+    elif any(size < 0 for size in config.context_sizes):
+        issues.append("Context sizes must be non-negative")
     
     # Check API URL format
     if not config.api_url.startswith(('http://', 'https://')):

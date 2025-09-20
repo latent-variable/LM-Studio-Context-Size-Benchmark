@@ -5,41 +5,56 @@ Create comparison charts from context size benchmark results
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 import glob
 import os
 
 def load_all_model_results(results_dir=None):
     """Load results from all model CSV files"""
     results = {}
-    
-    if results_dir is None:
-        # Find the latest results directory
-        results_dirs = glob.glob("results/run_*")
-        if not results_dirs:
-            print("❌ No results directories found!")
-            return results
-        
-        # Get the most recent run
-        results_dir = max(results_dirs)
-        print(f"📁 Loading results from: {results_dir}")
-    
-    # Look for results files in the specified directory
-    csv_pattern = os.path.join(results_dir, "*_results.csv")
+    resolved_dir = results_dir
+
+    if resolved_dir is None:
+        flat_files = glob.glob(os.path.join("results", "*_results.csv"))
+        if flat_files:
+            resolved_dir = "results"
+            print(f"📁 Loading results from: {resolved_dir}")
+        else:
+            run_dirs = glob.glob(os.path.join("results", "run_*"))
+            if run_dirs:
+                resolved_dir = max(run_dirs)
+                print(f"📁 Loading results from: {resolved_dir}")
+
+    if resolved_dir is None:
+        print("❌ No results files found!")
+        return results, None
+
+    csv_pattern = os.path.join(resolved_dir, "*_results.csv")
     csv_files = glob.glob(csv_pattern)
-    
-    if csv_files:
-        # Load results
-        for csv_file in csv_files:
-            print(f"📊 Loading {os.path.basename(csv_file)}")
-            df = pd.read_csv(csv_file)
-            if len(df) > 0:
-                model_name = df['model_name'].iloc[0]
-                results[model_name] = df
-    else:
-        print("❌ No results files found in the directory")
-    
-    return results, results_dir
+
+    if not csv_files:
+        print(f"❌ No results files found in {resolved_dir}")
+        return results, resolved_dir
+
+    for csv_file in csv_files:
+        print(f"📊 Loading {os.path.basename(csv_file)}")
+        df = pd.read_csv(csv_file)
+        if len(df) == 0:
+            continue
+
+        if 'model_name' in df:
+            names = df['model_name'].dropna()
+            model_name = str(names.iloc[0]).strip() if not names.empty else None
+        else:
+            model_name = None
+
+        if not model_name:
+            # Fallback to filename-derived name
+            base = os.path.basename(csv_file).replace('_results.csv', '')
+            model_name = base.replace('_', '/')
+
+        results[model_name] = df
+
+    return results, resolved_dir
 
 def create_comparison_charts(results, results_dir):
     """Create comparison charts showing performance vs context size"""
@@ -75,7 +90,8 @@ def create_comparison_charts(results, results_dir):
     for model_name, df in results.items():
         if len(df) == 0:
             continue
-            
+        df = df.sort_values('context_size')
+
         context_sizes = df['context_size'].values
         gen_speeds = df['tokens_per_second'].values
         
@@ -92,9 +108,16 @@ def create_comparison_charts(results, results_dir):
                 markersize=4,
                 label=clean_name)
         
-        max_gen_speed = max(max_gen_speed, max(gen_speeds))
-        max_context = max(max_context, max(context_sizes))
-    
+        if len(gen_speeds) > 0:
+            max_gen_speed = max(max_gen_speed, max(gen_speeds))
+        if len(context_sizes) > 0:
+            max_context = max(max_context, max(context_sizes))
+
+    if max_context == 0:
+        max_context = 1
+    if max_gen_speed == 0:
+        max_gen_speed = 1
+
     ax1.set_xlim(0, max_context * 1.05)
     ax1.set_ylim(0, max_gen_speed * 1.1)
     ax1.grid(True, alpha=0.3)
@@ -105,9 +128,8 @@ def create_comparison_charts(results, results_dir):
         ax1.set_xticks([0, 21026, 42052, 63079, 84105, 105131])
         ax1.set_xticklabels(['0', '21026', '42052', '63079', '84105', '105131'])
     else:
-        # Auto-format for smaller ranges
-        step = max_context // 5
-        ticks = list(range(0, max_context + 1, step))
+        step = max(1, max_context // 5)
+        ticks = list(range(0, max_context + step, step))
         ax1.set_xticks(ticks)
         ax1.set_xticklabels([f'{t:,}' for t in ticks])
     
@@ -121,7 +143,8 @@ def create_comparison_charts(results, results_dir):
     for model_name, df in results.items():
         if len(df) == 0:
             continue
-            
+        df = df.sort_values('context_size')
+
         context_sizes = df['context_size'].values
         prompt_speeds = df['prompt_processing_speed'].values
         
@@ -135,8 +158,12 @@ def create_comparison_charts(results, results_dir):
                 markersize=4,
                 label=clean_name)
         
-        max_prompt_speed = max(max_prompt_speed, max(prompt_speeds))
-    
+        if len(prompt_speeds) > 0:
+            max_prompt_speed = max(max_prompt_speed, max(prompt_speeds))
+
+    if max_prompt_speed == 0:
+        max_prompt_speed = 1
+
     ax2.set_xlim(0, max_context * 1.05)
     ax2.set_ylim(0, max_prompt_speed * 1.1)
     ax2.grid(True, alpha=0.3)
@@ -147,8 +174,8 @@ def create_comparison_charts(results, results_dir):
         ax2.set_xticks([0, 21026, 42052, 63079, 84105, 105131])
         ax2.set_xticklabels(['0', '21026', '42052', '63079', '84105', '105131'])
     else:
-        step = max_context // 5
-        ticks = list(range(0, max_context + 1, step))
+        step = max(1, max_context // 5)
+        ticks = list(range(0, max_context + step, step))
         ax2.set_xticks(ticks)
         ax2.set_xticklabels([f'{t:,}' for t in ticks])
     

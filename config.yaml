@@ -29,7 +29,7 @@ models:
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
-  context_sizes: [10000, 20000]
+  context_sizes: [0, 10000, 20000]
   
   # Alternative: Use range instead of explicit list
   # context_range:
@@ -38,7 +38,7 @@ test:
   #   step: 10000
   
   # Number of completion tokens to generate for each test
-  max_tokens: 100
+  max_tokens: 0
   
   # Temperature for generation
   temperature: 0.1

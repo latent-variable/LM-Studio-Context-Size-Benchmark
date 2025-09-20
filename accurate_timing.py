@@ -6,13 +6,20 @@ Accurate timing measurement that excludes model loading time
 import time
 import requests
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
+
+try:
+    import tiktoken
+except ImportError:  # Optional dependency for token counting
+    tiktoken = None
+
 from logger import BenchmarkLogger
 
 class AccurateTiming:
     def __init__(self, api_url: str, logger: BenchmarkLogger):
         self.api_url = api_url.rstrip('/')
         self.logger = logger
+        self._encoding = self._load_encoder()
         
     def simple_warmup(self, model_name: str) -> bool:
         """Simple warmup with a basic yes/no question to ensure model is loaded"""
@@ -68,10 +75,12 @@ class AccurateTiming:
         payload = {
             "model": model_name,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_tokens,
             "temperature": 0.1,
             "stream": True
         }
+
+        if max_tokens and max_tokens > 0:
+            payload["max_tokens"] = max_tokens
         
         try:
             request_start = time.perf_counter()  # Use high precision timer
@@ -140,13 +149,13 @@ class AccurateTiming:
             if not token_count_result:
                 self.logger.log_error("Could not get token counts")
                 return None
-            
-            prompt_tokens = token_count_result['prompt_tokens']
-            completion_tokens = len(content.split()) + content.count('.') + content.count(',')  # Rough estimate
-            
-            # Use actual completion tokens from non-streaming if available
-            if 'completion_tokens' in token_count_result:
-                completion_tokens = token_count_result['completion_tokens']
+
+            prompt_tokens = token_count_result.get('prompt_tokens') or self._estimate_token_count(prompt)
+            completion_tokens = self._estimate_token_count(content)
+
+            reported_completion_tokens = token_count_result.get('completion_tokens')
+            if reported_completion_tokens and reported_completion_tokens > completion_tokens:
+                completion_tokens = reported_completion_tokens
             
             tokens_per_second = completion_tokens / generation_time if generation_time > 0 else 0
             prompt_processing_speed = prompt_tokens / time_to_first_token if time_to_first_token > 0 else 0
@@ -174,12 +183,15 @@ class AccurateTiming:
     
     def _get_token_counts(self, prompt: str, model_name: str, max_tokens: int) -> Optional[Dict]:
         """Get accurate token counts from non-streaming request"""
+        probe_tokens = max_tokens if max_tokens and max_tokens > 0 else 16
+        probe_tokens = max(1, min(probe_tokens, 256))
+
         payload = {
             "model": model_name,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": min(10, max_tokens),  # Small number for quick response
             "temperature": 0.1,
-            "stream": False
+            "stream": False,
+            "max_tokens": probe_tokens
         }
         
         try:
@@ -205,7 +217,31 @@ class AccurateTiming:
         except Exception as e:
             self.logger.log_error("Token count request failed", e)
             return None
-    
+
+    def _load_encoder(self):
+        """Load default encoder for token estimation"""
+        if tiktoken is None:
+            return None
+
+        try:
+            return tiktoken.get_encoding("cl100k_base")
+        except Exception:
+            return None
+
+    def _estimate_token_count(self, text: str) -> int:
+        """Estimate token count using encoder fallback"""
+        if not text:
+            return 0
+
+        if self._encoding is not None:
+            try:
+                return len(self._encoding.encode(text))
+            except Exception:
+                pass
+
+        # Simple fallback based on whitespace
+        return max(1, len(text.split()))
+
     def single_measurement(self, prompt: str, model_name: str, max_tokens: int = 100) -> Optional[Dict]:
         """Take a single accurate measurement (model should already be warmed up)"""
         self.logger.log_info(f"📏 Taking single measurement")

@@ -9,7 +9,7 @@ import glob
 import pandas as pd
 import time
 from datetime import datetime
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 from dataclasses import dataclass
 
 from config_loader import load_config, print_config_summary, validate_config
@@ -38,11 +38,16 @@ class SmartBenchmark:
         self.config = load_config(config_path)
         self.existing_results = {}
         self.missing_work = {}
-        
         # Use single working results directory
         self.results_dir = self.config.results_dir
         os.makedirs(self.results_dir, exist_ok=True)
-        
+
+        # Map sanitized filenames back to model ids
+        self.model_name_lookup = {
+            model['name'].replace('/', '_'): model['name']
+            for model in self.config.models
+        }
+
         # Setup logging
         self.logger = BenchmarkLogger(self.results_dir)
         self.logger.log_config(self.config)
@@ -72,10 +77,9 @@ class SmartBenchmark:
             try:
                 df = pd.read_csv(file_path)
                 if len(df) > 0:
-                    # Extract model name from filename
                     filename = os.path.basename(file_path)
-                    model_name = filename.replace('_results.csv', '')
-                    
+                    model_name = self._resolve_model_name_from_results(filename, df)
+
                     if model_name not in model_data:
                         model_data[model_name] = []
                     model_data[model_name].append(df)
@@ -89,7 +93,8 @@ class SmartBenchmark:
         for model_name, dfs in model_data.items():
             if dfs:
                 combined_df = pd.concat(dfs, ignore_index=True)
-                # Remove duplicates based on context_size
+                if 'timestamp' in combined_df.columns:
+                    combined_df = combined_df.sort_values('timestamp')
                 combined_df = combined_df.drop_duplicates(subset=['context_size'], keep='last')
                 existing_results[model_name] = combined_df
                 
@@ -98,7 +103,19 @@ class SmartBenchmark:
         
         self.logger.log_existing_results(existing_results)
         return existing_results
-    
+
+    def _resolve_model_name_from_results(self, filename: str, df: pd.DataFrame) -> str:
+        """Resolve the canonical model name from a results file"""
+        if 'model_name' in df:
+            cleaned = df['model_name'].dropna()
+            if not cleaned.empty:
+                name = str(cleaned.iloc[-1]).strip()
+                if name:
+                    return name
+
+        base_name = filename.replace('_results.csv', '')
+        return self.model_name_lookup.get(base_name, base_name)
+
     def identify_missing_work(self, existing_results: Dict[str, pd.DataFrame]) -> Dict[str, List[int]]:
         """Identify which experiments are missing"""
         self.logger.log_info("🔍 Identifying missing work...")
@@ -266,8 +283,9 @@ class SmartBenchmark:
             new_df = pd.DataFrame(data)
             
             if model_name in combined_results:
-                # Combine with existing
                 combined_df = pd.concat([combined_results[model_name], new_df], ignore_index=True)
+                if 'timestamp' in combined_df.columns:
+                    combined_df = combined_df.sort_values('timestamp')
                 combined_df = combined_df.drop_duplicates(subset=['context_size'], keep='last')
                 combined_results[model_name] = combined_df
             else:
