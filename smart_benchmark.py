@@ -39,9 +39,8 @@ class SmartBenchmark:
         self.existing_results = {}
         self.missing_work = {}
         
-        # Create timestamped results directory for logging
-        self.run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.results_dir = f"{self.config.results_dir}/run_{self.run_timestamp}"
+        # Use single working results directory
+        self.results_dir = self.config.results_dir
         os.makedirs(self.results_dir, exist_ok=True)
         
         # Setup logging
@@ -60,8 +59,8 @@ class SmartBenchmark:
         
         existing_results = {}
         
-        # Look in all result directories
-        results_pattern = f"{self.config.results_dir}/run_*/*_results.csv"
+        # Look in the single results directory
+        results_pattern = f"{self.results_dir}/*_results.csv"
         result_files = glob.glob(results_pattern)
         
         self.logger.log_info(f"   Found {len(result_files)} result files")
@@ -136,6 +135,7 @@ class SmartBenchmark:
             self.logger.log_model_start(model_name, missing_contexts)
             
             model_results = []
+            first_measurement = True  # Track if this is the first measurement for this model
             
             for context_size in missing_contexts:
                 self.logger.log_info(f"🧪 Testing {model_name} @ {context_size:,} tokens")
@@ -147,12 +147,17 @@ class SmartBenchmark:
                 
                 self.logger.log_api_request(model_name, context_size, len(prompt.split()))
                 
-                # Use accurate timing measurement
+                # Use accurate timing measurement (warmup only on first measurement)
                 result = self.timing.accurate_measurement(
                     prompt, 
                     model_name, 
-                    max_tokens=self.config.max_tokens
+                    max_tokens=self.config.max_tokens,
+                    skip_warmup=not first_measurement
                 )
+                
+                # After first measurement, skip warmup for subsequent ones
+                if first_measurement:
+                    first_measurement = False
                 
                 if result:
                     # Create benchmark result
@@ -291,11 +296,11 @@ class SmartBenchmark:
             self.logger.log_error("Failed to create charts", e)
         
         # Create summary
-        summary_path = os.path.join(self.results_dir, "run_summary.txt")
+        summary_path = os.path.join(self.results_dir, "benchmark_summary.txt")
         with open(summary_path, 'w') as f:
-            f.write("LM Studio Context Size Benchmark - Smart Run Summary\n")
+            f.write("LM Studio Context Size Benchmark - Summary\n")
             f.write("=" * 60 + "\n\n")
-            f.write(f"Run Timestamp: {self.run_timestamp}\n")
+            f.write(f"Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"System: {self.config.system_name}\n")
             f.write(f"API URL: {self.config.api_url}\n\n")
             
