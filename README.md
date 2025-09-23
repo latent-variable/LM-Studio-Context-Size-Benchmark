@@ -18,6 +18,7 @@ Measure LM Studio model performance across different prompt lengths without re-r
 - Python 3.8+
 - LM Studio running locally with the HTTP API enabled (defaults to `http://localhost:5002`)
 - A PDF (or fallback text) in `books/` for prompt material
+- The repo ships with a public-domain starter text: `books/alice_adventures_in_wonderland.txt`
 
 ## 🛠️ Installation
 
@@ -52,6 +53,13 @@ Measure LM Studio model performance across different prompt lengths without re-r
 python smart_benchmark.py
 ```
 
+Or use the helper script (installs deps when `INSTALL_DEPS=1`):
+
+```bash
+chmod +x run_benchmark.sh
+./run_benchmark.sh
+```
+
 ### Main Scripts
 
 - `smart_benchmark.py` — end-to-end benchmark runner with incremental saves
@@ -66,7 +74,7 @@ Edit `config.yaml` to customise the run. Default structure:
 ```yaml
 api:
   url: "http://localhost:5002"
-  timeout: 600
+  timeout: 3600
   delay_between_requests: 2
   delay_between_models: 10
 
@@ -77,21 +85,27 @@ system:
 models:
   - name: "qwen/qwen3-next-80b"
     enabled: true
-    description: "Qwen 3 Next 80B"
+    description: "Qwen 3 Next 80B 4bit"
   - name: "openai/gpt-oss-20b"
     enabled: true
-    description: "GPT-OSS 20B"
+    description: "GPT-OSS 20B MXFP4"
   - name: "openai/gpt-oss-120b"
     enabled: true
-    description: "GPT-OSS 120B"
+    description: "GPT-OSS 120B MXFP4"
+  - name: "mistralai/magistral-small-2509"
+    enabled: true
+    description: "Magistral Small 2509 4bit"
+  - name: "qwen/qwen3-4b-2507"
+    enabled: true
+    description: "Qwen 3 4B 2507 4bit"
 
 test:
-  context_sizes: [1000, 10000, 20000]
+  context_sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
   max_tokens: 512            # 0 = unlimited
   temperature: 0.1
 
 content:
-  book_path: "books/harrypotter.pdf"
+  book_path: "books/alice_adventures_in_wonderland.txt"
   prompt_types:
     - literary_analysis
     - creative_writing_feedback
@@ -108,10 +122,12 @@ charts:
   dpi: 300
   figure_size: [16, 8]
   colors:
-    "qwen/qwen3-next-80b": "#d62728"
-    "openai/gpt-oss-20b": "#ff7f0e"
-    "openai/gpt-oss-120b": "#2ca02c"
-    "default": "#1f77b4"
+    "qwen/qwen3-next-80b": "#F28E8E"
+    "openai/gpt-oss-20b": "#F6C78F"
+    "openai/gpt-oss-120b": "#8FD694"
+    "mistralai/magistral-small-2509": "#A39CF4"
+    "qwen/qwen3-4b-2507": "#A0E7E5"
+    "default": "#77B6EA"
 ```
 
 ## 📊 Output Structure
@@ -125,8 +141,10 @@ results/
 ├── benchmark_summary.txt
 ├── benchmark_comparison_charts.png
 ├── benchmark_comparison_charts.svg
-├── openai_gpt_oss_20b_results.csv
-├── openai_gpt_oss_120b_results.csv
+├── mistralai_magistral-small-2509_results.csv
+├── openai_gpt-oss-20b_results.csv
+├── openai_gpt-oss-120b_results.csv
+├── qwen_qwen3-4b-2507_results.csv
 └── qwen_qwen3-next-80b_results.csv
 ```
 

@@ -40,13 +40,23 @@ Good options:
 - Open source documentation
 - Your own written content
 
-## Current Configuration
+## Included Sample Book
 
-The default configuration expects: `books/harrypotter.pdf`
+To make it easy to get started, the repository includes a public-domain
+text from Project Gutenberg:
 
-If you don't have this file, either:
-1. Add a book with this name, or
-2. Update `config.yaml` to point to your book file
+- `books/alice_adventures_in_wonderland.txt`
+
+The default `config.yaml` points at this file, so the benchmark works
+out-of-the-box. You are welcome to swap in any other text—just update
+`content.book_path` accordingly.
+
+### Need an even larger book?
+
+If you want to stress-test 100k+ token contexts, download a long public
+domain novel such as *War and Peace* (Project Gutenberg ebook #2600,
+~3.2 MB of text) and drop it in this directory. Point `content.book_path`
+at the new file and rerun the benchmark.
 
 ## Testing Without a Book
 

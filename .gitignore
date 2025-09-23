@@ -97,6 +97,7 @@ books/*.doc
 
 # Keep the books directory but not the content
 !books/.gitkeep
+!books/alice_adventures_in_wonderland.txt
 
 # Results (exclude by default, users can add specific results if needed)
 results/*

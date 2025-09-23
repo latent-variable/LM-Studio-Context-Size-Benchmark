@@ -34,6 +34,10 @@ models:
     enabled: true
     description: "Qwen 3 4B 2507 4bit"
 
+  - name: "glm-4.5-air-mlx"
+    enabled: true
+    description: "GLM 4.5 Air MLX 4bit"
+
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
@@ -53,7 +57,7 @@ test:
 
 # Book content settings
 content:
-  book_path: "books/harrypotter.pdf"  # Using Harry Potter for this experiment
+  book_path: "books/alice_adventures_in_wonderland.txt"
   # Prompt types to use (random selection)
   prompt_types:
     - "literary_analysis"
@@ -78,4 +82,5 @@ charts:
     "openai/gpt-oss-120b": "#8FD694"        # Mint green
     "mistralai/magistral-small-2509": "#A39CF4"  # Lavender blue
     "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
+    "glm-4.5-air-mlx": "#FFB6C1"          # Light pink
     "default": "#77B6EA"                  # Light sky blue
