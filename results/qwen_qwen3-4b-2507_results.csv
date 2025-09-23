@@ -1,0 +1,2 @@
+model_name,context_size,prompt_tokens,completion_tokens,total_tokens,time_to_first_token,generation_time,total_time,tokens_per_second,prompt_processing_speed,system_info,timestamp
+qwen/qwen3-4b-2507,1000,1012,149,1161,1.1015039160847664,1.564526166766882,2.666789624840021,95.23650237688952,918.7438966146366,M3 Max MacBook Pro 128GB RAM,2025-09-20T01:21:25.591122

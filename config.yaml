@@ -26,10 +26,18 @@ models:
     enabled: true
     description: "GPT-OSS 120B"
 
+  - name: "mistralai/magistral-small-2509"
+    enabled: true
+    description: "Magistral Small 2509"
+
+  - name: "qwen/qwen3-4b-2507"
+    enabled: true
+    description: "Qwen 3 4B 2507"
+
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
-  context_sizes: [1000, 10000, 20000, 40000, 80000]
+  context_sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
   
   # Alternative: Use range instead of explicit list
   # context_range:
@@ -68,4 +76,6 @@ charts:
     "qwen/qwen3-next-80b": "#d62728"      # Red
     "openai/gpt-oss-20b": "#ff7f0e"       # Orange  
     "openai/gpt-oss-120b": "#2ca02c"      # Green
+    "mistralai/magistral-small-2509": "#9467bd" # Purple
+    "qwen/qwen3-4b-2507": "#8c564b"      # Brown
     "default": "#1f77b4"                  # Blue
