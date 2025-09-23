@@ -3,7 +3,7 @@
 # API Settings
 api:
   url: "http://localhost:5002"
-  timeout: 1200  # seconds
+  timeout: 3600  # seconds
   delay_between_requests: 2  # seconds
   delay_between_models: 10  # seconds
 
@@ -16,23 +16,23 @@ system:
 models:
   - name: "qwen/qwen3-next-80b"
     enabled: true
-    description: "Qwen 3 Next 80B"
+    description: "Qwen 3 Next 80B 4bit"
     
   - name: "openai/gpt-oss-20b"
     enabled: true
-    description: "GPT-OSS 20B"
+    description: "GPT-OSS 20B MXFP4"
     
   - name: "openai/gpt-oss-120b"
     enabled: true
-    description: "GPT-OSS 120B"
+    description: "GPT-OSS 120B MXFP4"
 
   - name: "mistralai/magistral-small-2509"
     enabled: true
-    description: "Magistral Small 2509"
+    description: "Magistral Small 2509 4bit"
 
   - name: "qwen/qwen3-4b-2507"
     enabled: true
-    description: "Qwen 3 4B 2507"
+    description: "Qwen 3 4B 2507 4bit"
 
 # Test Configuration
 test:
@@ -73,9 +73,9 @@ charts:
   dpi: 300
   figure_size: [16, 8]  # width, height in inches
   colors:
-    "qwen/qwen3-next-80b": "#d62728"      # Red
-    "openai/gpt-oss-20b": "#ff7f0e"       # Orange  
-    "openai/gpt-oss-120b": "#2ca02c"      # Green
-    "mistralai/magistral-small-2509": "#9467bd" # Purple
-    "qwen/qwen3-4b-2507": "#8c564b"      # Brown
-    "default": "#1f77b4"                  # Blue
+    "qwen/qwen3-next-80b": "#F28E8E"        # Soft coral
+    "openai/gpt-oss-20b": "#F6C78F"         # Warm apricot  
+    "openai/gpt-oss-120b": "#8FD694"        # Mint green
+    "mistralai/magistral-small-2509": "#A39CF4"  # Lavender blue
+    "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
+    "default": "#77B6EA"                  # Light sky blue

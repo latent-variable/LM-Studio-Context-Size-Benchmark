@@ -90,7 +90,7 @@ class AccurateTiming:
                 f"{self.api_url}/v1/chat/completions",
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=600,
+                timeout=self.timeout,
                 stream=True
             )
             

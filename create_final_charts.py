@@ -7,12 +7,35 @@ import os
 import glob
 
 import pandas as pd
+import yaml
 
 if os.environ.get('BENCHMARK_SHOW_CHARTS') != '1':
     import matplotlib
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
+
+
+def _load_chart_metadata():
+    """Load color and description metadata from config.yaml"""
+    colors = {}
+    descriptions = {}
+
+    try:
+        with open('config.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+
+        colors = config.get('charts', {}).get('colors', {}) or {}
+        descriptions = {
+            model['name']: model.get('description', model['name'])
+            for model in config.get('models', [])
+            if model.get('enabled', True)
+        }
+    except Exception:
+        pass
+
+    default_color = colors.get('default', '#77B6EA')
+    return colors, descriptions, default_color
 
 def load_all_model_results(results_dir=None):
     """Load results from all model CSV files"""
@@ -73,13 +96,24 @@ def create_comparison_charts(results, results_dir):
     plt.style.use('default')
     
     # Colors for each model
-    colors = {
-        'qwen/qwen3-next-80b': '#d62728',     # Red
-        'openai/gpt-oss-20b': '#ff7f0e',      # Orange  
-        'openai/gpt-oss-120b': '#2ca02c',     # Green
-        'unsloth/gpt-oss-120b': '#2ca02c',    # Green (alternative name)
-        'unsloth/gpt-oss-20b': '#ff7f0e',     # Orange (alternative name)
-    }
+    config_colors, model_descriptions, default_color = _load_chart_metadata()
+
+    def resolve_color(name: str) -> str:
+        if name in config_colors:
+            return config_colors[name]
+        # Handle alternate vendor prefixes (e.g., unsloth → openai)
+        alt = name.replace('unsloth/', 'openai/')
+        if alt in config_colors:
+            return config_colors[alt]
+        return default_color
+
+    def resolve_label(name: str) -> str:
+        if name in model_descriptions:
+            return model_descriptions[name]
+        alt = name.replace('unsloth/', 'openai/')
+        if alt in model_descriptions:
+            return model_descriptions[alt]
+        return name.replace('/', ' · ')
     
     # Create figure with stacked subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), sharex=True)
@@ -101,10 +135,8 @@ def create_comparison_charts(results, results_dir):
         gen_speeds = df['tokens_per_second'].values
         
         # Get color for this model
-        color = colors.get(model_name, '#1f77b4')  # Default blue
-        
-        # Clean model name for legend
-        clean_name = model_name.replace('/', '-').replace('openai-', '').replace('unsloth-', '')
+        color = resolve_color(model_name)
+        clean_name = resolve_label(model_name)
         
         ax1.plot(context_sizes, gen_speeds,
                 color=color,
@@ -153,8 +185,8 @@ def create_comparison_charts(results, results_dir):
         context_sizes = df['context_size'].values
         prompt_speeds = df['prompt_processing_speed'].values
         
-        color = colors.get(model_name, '#1f77b4')
-        clean_name = model_name.replace('/', '-').replace('openai-', '').replace('unsloth-', '')
+        color = resolve_color(model_name)
+        clean_name = resolve_label(model_name)
         
         ax2.plot(context_sizes, prompt_speeds,
                 color=color,
@@ -184,7 +216,7 @@ def create_comparison_charts(results, results_dir):
         ax2.set_xticks(ticks)
         ax2.set_xticklabels([f'{t:,}' for t in ticks])
     
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     chart_png = os.path.join(results_dir, 'benchmark_comparison_charts.png')
     plt.savefig(chart_png, dpi=300, bbox_inches='tight')
