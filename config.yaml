@@ -10,7 +10,7 @@ api:
 # System Information
 system:
   name: "M3 Max MacBook Pro 128GB RAM"
-  notes: "4-bit quantization, 8-bit KV-Cache"
+  notes: "4-bit quantization"
 
 # Models to test (in order)
 models:
@@ -34,9 +34,9 @@ models:
     enabled: true
     description: "Qwen 3 4B 2507 4bit"
 
-  - name: "glm-4.5-air-mlx"
+  - name: "qwen3-next-80b-a3b-instruct-mlx@8bit"
     enabled: true
-    description: "GLM 4.5 Air MLX 4bit"
+    description: "Qwen 3 Next 80B 8bit"
 
 # Test Configuration
 test:
@@ -83,4 +83,5 @@ charts:
     "mistralai/magistral-small-2509": "#A39CF4"  # Lavender blue
     "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
     "glm-4.5-air-mlx": "#FFB6C1"          # Light pink
+    "qwen3-next-80b-a3b-instruct-mlx@8bit": "#DDA0DD"  # Plum
     "default": "#77B6EA"                  # Light sky blue

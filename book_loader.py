@@ -16,34 +16,52 @@ class BookChunkLoader:
         self.load_book()
     
     def load_book(self):
-        """Load and extract text from the PDF"""
+        """Load and extract text from PDF or TXT file"""
         print(f"📖 Loading book from {self.pdf_path}...")
-        
+
         try:
-            with open(self.pdf_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                
-                text_parts = []
-                for page_num in range(len(pdf_reader.pages)):
-                    page = pdf_reader.pages[page_num]
-                    text = page.extract_text()
-                    
-                    # Clean up the text
-                    text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
-                    text = text.strip()
-                    
-                    if text:  # Only add non-empty pages
-                        text_parts.append(text)
-                
-                self.book_text = ' '.join(text_parts)
-                
+            if self.pdf_path.lower().endswith('.txt'):
+                # Handle text files
+                with open(self.pdf_path, 'r', encoding='utf-8') as file:
+                    self.book_text = file.read()
+
+                # Clean up the text
+                self.book_text = re.sub(r'\s+', ' ', self.book_text)  # Normalize whitespace
+                self.book_text = self.book_text.strip()
+
                 # Calculate token count
                 token_count = len(self.encoding.encode(self.book_text))
-                
-                print(f"✅ Loaded {len(pdf_reader.pages)} pages")
+
+                print(f"✅ Loaded text file")
                 print(f"📝 Total text length: {len(self.book_text):,} characters")
                 print(f"🔢 Total tokens: {token_count:,}")
-                
+
+            else:
+                # Handle PDF files
+                with open(self.pdf_path, 'rb') as file:
+                    pdf_reader = PyPDF2.PdfReader(file)
+
+                    text_parts = []
+                    for page_num in range(len(pdf_reader.pages)):
+                        page = pdf_reader.pages[page_num]
+                        text = page.extract_text()
+
+                        # Clean up the text
+                        text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
+                        text = text.strip()
+
+                        if text:  # Only add non-empty pages
+                            text_parts.append(text)
+
+                    self.book_text = ' '.join(text_parts)
+
+                    # Calculate token count
+                    token_count = len(self.encoding.encode(self.book_text))
+
+                    print(f"✅ Loaded {len(pdf_reader.pages)} pages")
+                    print(f"📝 Total text length: {len(self.book_text):,} characters")
+                    print(f"🔢 Total tokens: {token_count:,}")
+
         except Exception as e:
             print(f"❌ Error loading book: {e}")
             # Fallback to synthetic content
