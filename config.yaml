@@ -38,6 +38,10 @@ models:
     enabled: true
     description: "Qwen 3 Next 80B 8bit"
 
+  - name: "qwen3-next-80b-a3b-instruct-mlx@6bit"
+    enabled: true
+    description: "Qwen 3 Next 80B A3B Instruct 6bit"
+
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
@@ -84,4 +88,5 @@ charts:
     "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
     "glm-4.5-air-mlx": "#FFB6C1"          # Light pink
     "qwen3-next-80b-a3b-instruct-mlx@8bit": "#DDA0DD"  # Plum
+    "qwen3-next-80b-a3b-instruct-mlx@6bit": "#FFA07A"     # Light salmon
     "default": "#77B6EA"                  # Light sky blue
