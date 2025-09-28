@@ -22,17 +22,35 @@ class AccurateTiming:
         self.timeout = timeout if timeout and timeout > 0 else 60
         self._encoding = self._load_encoder()
         
+    def _build_request_payload(self, model_name: str, prompt: str, max_tokens: int, stream: bool) -> Dict:
+        """Create a completion payload with caching disabled."""
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1,
+            "stream": stream,
+            "options": {
+                "cache_prompt": False,
+                "prompt_cache": False,
+                "prompt_cache_all": False
+            }
+        }
+
+        if max_tokens and max_tokens > 0:
+            payload["max_tokens"] = max_tokens
+
+        return payload
+
     def simple_warmup(self, model_name: str) -> bool:
         """Simple warmup with a basic yes/no question to ensure model is loaded"""
         self.logger.log_info(f"🔥 Warming up model: {model_name}")
-        
-        warmup_payload = {
-            "model": model_name,
-            "messages": [{"role": "user", "content": "Answer with just 'yes' or 'no': Is the sky blue?"}],
-            "max_tokens": 5,
-            "temperature": 0.1,
-            "stream": False
-        }
+
+        warmup_payload = self._build_request_payload(
+            model_name,
+            "Answer with just 'yes' or 'no': Is the sky blue?",
+            max_tokens=5,
+            stream=False
+        )
         
         try:
             self.logger.log_debug("   Sending warmup request...")
@@ -73,15 +91,7 @@ class AccurateTiming:
         """Measure timing using streaming to get accurate TTFT"""
         self.logger.log_debug(f"📊 Starting streaming measurement for {len(prompt)} char prompt")
         
-        payload = {
-            "model": model_name,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.1,
-            "stream": True
-        }
-
-        if max_tokens and max_tokens > 0:
-            payload["max_tokens"] = max_tokens
+        payload = self._build_request_payload(model_name, prompt, max_tokens, stream=True)
         
         try:
             request_start = time.perf_counter()  # Use high precision timer
@@ -187,13 +197,7 @@ class AccurateTiming:
         probe_tokens = max_tokens if max_tokens and max_tokens > 0 else 16
         probe_tokens = max(1, min(probe_tokens, 256))
 
-        payload = {
-            "model": model_name,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.1,
-            "stream": False,
-            "max_tokens": probe_tokens
-        }
+        payload = self._build_request_payload(model_name, prompt, probe_tokens, stream=False)
 
         try:
             response = requests.post(

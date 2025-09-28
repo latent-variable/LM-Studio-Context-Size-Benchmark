@@ -160,26 +160,35 @@ class SmartBenchmark:
             for context_size in missing_contexts:
                 self.logger.log_info(f"🧪 Testing {model_name} @ {context_size:,} tokens")
                 
-                # Generate realistic prompt
-                chunk = self.book_loader.get_chunk_by_tokens(context_size)
-                prompt = self.book_loader.create_analysis_prompt(chunk)
-
-                estimated_prompt_tokens = self.book_loader.get_token_count(prompt)
-                self.logger.log_api_request(model_name, context_size, estimated_prompt_tokens)
-                
+                base_chunk = self.book_loader.get_chunk_by_tokens(context_size)
                 trial_results = []
-                
+
                 for trial_index in range(1, trials_per_context + 1):
                     if trials_per_context > 1:
                         self.logger.log_info(f"   ▶️ Trial {trial_index}/{trials_per_context}")
 
-                    prompt_variant = prompt
+                    # Generate a fresh prompt for this trial when uniqueness is required
                     if getattr(self.config, 'unique_trial_prompts', False):
-                        # Append metadata so each trial uses a unique prompt and cannot reuse KV cache
+                        chunk = self.book_loader.get_chunk_by_tokens(context_size)
+                    else:
+                        chunk = base_chunk
+
+                    prompt = self.book_loader.create_analysis_prompt(chunk)
+                    estimated_prompt_tokens = self.book_loader.get_token_count(prompt)
+                    self.logger.log_api_request(model_name, context_size, estimated_prompt_tokens)
+
+                    trial_marker = (
+                        f"[benchmark trial={trial_index} context={context_size} "
+                        f"uuid={datetime.now().isoformat()}]"
+                    )
+                    prompt_variant = f"{trial_marker}\n\n{prompt}\n\n{trial_marker}"
+
+                    if getattr(self.config, 'unique_trial_prompts', False):
+                        # Append additional metadata to discourage reusing KV caches
                         prompt_variant = (
-                            f"{prompt}\n\n"
-                            f"[benchmark: model={model_name} context={context_size} trial={trial_index}"
-                            f" timestamp={datetime.now().isoformat()}]"
+                            f"{trial_marker}\n\n{prompt}\n\n"
+                            f"[benchmark model={model_name} context={context_size} trial={trial_index} "
+                            f"timestamp={datetime.now().isoformat()}]"
                         )
 
                     result = self.timing.accurate_measurement(
@@ -200,8 +209,10 @@ class SmartBenchmark:
                         first_measurement = False
 
                     # Delay between trials/requests
-                    if self.config.delay_between_requests > 0:
-                        self.logger.log_debug(f"   Waiting {self.config.delay_between_requests}s before next request...")
+                    if self.config.delay_between_requests > 0 and trial_index < trials_per_context:
+                        self.logger.log_debug(
+                            f"   Waiting {self.config.delay_between_requests}s before next request..."
+                        )
                         time.sleep(self.config.delay_between_requests)
 
                 if trial_results:

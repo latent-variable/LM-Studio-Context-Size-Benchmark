@@ -30,6 +30,7 @@ class BenchmarkConfig:
     temperature: float
     trials_per_context: int
     unique_trial_prompts: bool
+    disable_prompt_cache: bool
     
     # Content settings
     book_path: str
@@ -72,6 +73,7 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
     
     trials_per_context = config_data['test'].get('trials_per_context', 1)
     unique_trial_prompts = config_data['test'].get('unique_trial_prompts', False)
+    disable_prompt_cache = config_data['test'].get('disable_prompt_cache', False)
 
     return BenchmarkConfig(
         # API settings
@@ -93,6 +95,7 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
         temperature=config_data['test']['temperature'],
         trials_per_context=trials_per_context,
         unique_trial_prompts=unique_trial_prompts,
+        disable_prompt_cache=disable_prompt_cache,
         
         # Content settings
         book_path=config_data['content']['book_path'],
@@ -132,6 +135,7 @@ def print_config_summary(config: BenchmarkConfig):
     print(f"   Temperature: {config.temperature}")
     print(f"   Trials per context: {config.trials_per_context}")
     print(f"   Unique trial prompts: {config.unique_trial_prompts}")
+    print(f"   Disable prompt cache: {config.disable_prompt_cache}")
     print(f"   Timeout: {config.api_timeout}s")
     print()
 
@@ -158,6 +162,8 @@ def validate_config(config: BenchmarkConfig) -> List[str]:
 
     if config.unique_trial_prompts and config.trials_per_context <= 1:
         issues.append("unique_trial_prompts is unnecessary when trials_per_context <= 1")
+
+    # No additional validation for disable_prompt_cache (boolean)
 
     # Check API URL format
     if not config.api_url.startswith(('http://', 'https://')):

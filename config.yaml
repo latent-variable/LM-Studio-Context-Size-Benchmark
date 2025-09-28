@@ -49,6 +49,9 @@ test:
   # When averaging, randomize each trial's prompt so KV cache can't short-cut
   unique_trial_prompts: true
 
+  # Disable server-side prompt caching between requests (if supported)
+  disable_prompt_cache: true
+
 # Book content settings
 content:
   book_path: "books/alice_adventures_in_wonderland.txt"
