@@ -1,0 +1,92 @@
+# LM Studio Context Size Benchmark Configuration
+
+# API Settings
+api:
+  url: "http://localhost:5002"
+  timeout: 3600  # seconds
+  delay_between_requests: 2  # seconds
+  delay_between_models: 10  # seconds
+
+# System Information
+system:
+  name: "M3 Max MacBook Pro 128GB RAM"
+  notes: "4-bit quantization"
+
+# Models to test (in order)
+models:
+  - name: "qwen/qwen3-next-80b"
+    enabled: true
+    description: "Qwen 3 Next 80B 4bit"
+    
+  - name: "openai/gpt-oss-20b"
+    enabled: true
+    description: "GPT-OSS 20B MXFP4"
+    
+  - name: "openai/gpt-oss-120b"
+    enabled: true
+    description: "GPT-OSS 120B MXFP4"
+
+  - name: "mistralai/magistral-small-2509"
+    enabled: true
+    description: "Magistral Small 2509 4bit"
+
+  - name: "qwen/qwen3-4b-2507"
+    enabled: true
+    description: "Qwen 3 4B 2507 4bit"
+
+  - name: "qwen3-next-80b-a3b-instruct-mlx@8bit"
+    enabled: true
+    description: "Qwen 3 Next 80B 8bit"
+
+  - name: "qwen3-next-80b-a3b-instruct-mlx@6bit"
+    enabled: true
+    description: "Qwen 3 Next 80B A3B Instruct 6bit"
+
+# Test Configuration
+test:
+  # Context sizes to test (in tokens) - Quick experiment up to 20k
+  context_sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+  
+  # Alternative: Use range instead of explicit list
+  # context_range:
+  #   start: 10000
+  #   end: 100000
+  #   step: 10000
+  
+  # Number of completion tokens to generate for each test
+  max_tokens: 512
+  
+  # Temperature for generation
+  temperature: 0.1
+
+# Book content settings
+content:
+  book_path: "books/alice_adventures_in_wonderland.txt"
+  # Prompt types to use (random selection)
+  prompt_types:
+    - "literary_analysis"
+    - "creative_writing_feedback" 
+    - "editorial_review"
+    - "lecture_preparation"
+    - "adaptation_analysis"
+
+# Output settings
+output:
+  results_dir: "results"
+  create_charts: true
+  save_summary: true
+  
+# Chart settings
+charts:
+  dpi: 300
+  figure_size: [16, 8]  # width, height in inches
+  colors:
+    "qwen/qwen3-next-80b": "#F28E8E"        # Soft coral
+    "openai/gpt-oss-20b": "#F6C78F"         # Warm apricot  
+    "openai/gpt-oss-120b": "#8FD694"        # Mint green
+    "mistralai/magistral-small-2509": "#A39CF4"  # Lavender blue
+    "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
+    "glm-4.5-air-mlx": "#FFB6C1"          # Light pink
+    "qwen3-next-80b-a3b-instruct-mlx@8bit": "#DDA0DD"  # Plum
+    "qwen3-next-80b-a3b-instruct-mlx@6bit": "#FFA07A"     # Light salmon
+    "default": "#77B6EA"                  # Light sky blue

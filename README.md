@@ -2,7 +2,7 @@
 
 Measure LM Studio model performance across different prompt lengths without re-running finished experiments. The toolkit wraps realistic prompt generation, streaming-based timing, incremental result storage, and charting utilities so you can focus on the hardware and model comparisons that matter.
 
-![Benchmark overview](results/benchmark_comparison_charts.svg)
+![Benchmark overview](results_mix/benchmark_comparison_charts.svg)
 
 ## 🚀 Features
 

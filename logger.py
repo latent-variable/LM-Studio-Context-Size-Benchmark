@@ -68,6 +68,7 @@ class BenchmarkLogger:
         max_tokens_display = "Unlimited" if config.max_tokens <= 0 else config.max_tokens
         self.logger.info(f"Max tokens: {max_tokens_display}")
         self.logger.info(f"Temperature: {config.temperature}")
+        self.logger.info(f"Trials per context: {config.trials_per_context}")
         self.logger.info(f"Timeout: {config.api_timeout}s")
         
         self.logger.info("Models to test:")
@@ -127,11 +128,40 @@ class BenchmarkLogger:
             self.logger.info(f"✅ API RESPONSE: {model_name} @ {context_size:,} tokens")
             self.logger.info(f"   Prompt tokens: {result.get('prompt_tokens', 'N/A')}")
             self.logger.info(f"   Completion tokens: {result.get('completion_tokens', 'N/A')}")
-            self.logger.info(f"   Total time: {result.get('total_time', 'N/A'):.3f}s")
-            self.logger.info(f"   Time to first token: {result.get('time_to_first_token', 'N/A'):.3f}s")
-            self.logger.info(f"   Generation time: {result.get('generation_time', 'N/A'):.3f}s")
-            self.logger.info(f"   Tokens per second: {result.get('tokens_per_second', 'N/A'):.2f}")
-            self.logger.info(f"   Prompt processing speed: {result.get('prompt_processing_speed', 'N/A'):.2f}")
+            trials = result.get('trials')
+            if trials:
+                self.logger.info(f"   Trials: {trials}")
+
+            total_time = result.get('total_time', 'N/A')
+            ttft = result.get('time_to_first_token', 'N/A')
+            generation_time = result.get('generation_time', 'N/A')
+            tokens_per_second = result.get('tokens_per_second', 'N/A')
+            prompt_processing_speed = result.get('prompt_processing_speed', 'N/A')
+
+            if isinstance(total_time, (int, float)):
+                self.logger.info(f"   Total time: {total_time:.3f}s")
+            else:
+                self.logger.info(f"   Total time: {total_time}")
+
+            if isinstance(ttft, (int, float)):
+                self.logger.info(f"   Time to first token: {ttft:.3f}s")
+            else:
+                self.logger.info(f"   Time to first token: {ttft}")
+
+            if isinstance(generation_time, (int, float)):
+                self.logger.info(f"   Generation time: {generation_time:.3f}s")
+            else:
+                self.logger.info(f"   Generation time: {generation_time}")
+
+            if isinstance(tokens_per_second, (int, float)):
+                self.logger.info(f"   Tokens per second: {tokens_per_second:.2f}")
+            else:
+                self.logger.info(f"   Tokens per second: {tokens_per_second}")
+
+            if isinstance(prompt_processing_speed, (int, float)):
+                self.logger.info(f"   Prompt processing speed: {prompt_processing_speed:.2f}")
+            else:
+                self.logger.info(f"   Prompt processing speed: {prompt_processing_speed}")
         else:
             self.logger.error(f"❌ API RESPONSE: {model_name} @ {context_size:,} tokens - FAILED")
     

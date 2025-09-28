@@ -10,42 +10,22 @@ api:
 # System Information
 system:
   name: "M3 Max MacBook Pro 128GB RAM"
-  notes: "4-bit quantization"
+  notes: "MXFP4 quantization"
 
-# Models to test (in order)
+# Models to test (in order) - 3 GPT-OSS 120B variants
 models:
-  - name: "qwen/qwen3-next-80b"
-    enabled: true
-    description: "Qwen 3 Next 80B 4bit"
-    
-  - name: "openai/gpt-oss-20b"
-    enabled: true
-    description: "GPT-OSS 20B MXFP4"
-    
   - name: "openai/gpt-oss-120b"
     enabled: true
-    description: "GPT-OSS 120B MXFP4"
-
-  - name: "mistralai/magistral-small-2509"
+    description: "GPT-OSS 120B MXFP4 (OpenAI)"
+    
+  - name: "mlx-community/gpt-oss-120b"
     enabled: true
-    description: "Magistral Small 2509 4bit"
-
-  - name: "qwen/qwen3-4b-2507"
-    enabled: true
-    description: "Qwen 3 4B 2507 4bit"
-
-  - name: "qwen3-next-80b-a3b-instruct-mlx@8bit"
-    enabled: true
-    description: "Qwen 3 Next 80B 8bit"
-
-  - name: "qwen3-next-80b-a3b-instruct-mlx@6bit"
-    enabled: true
-    description: "Qwen 3 Next 80B A3B Instruct 6bit"
+    description: "GPT-OSS 120B MXFP4 (MLX Community)"
 
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
-  context_sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+  context_sizes: [128, 512, 1024, 4096, 16384, 32768, 65536]
   
   # Alternative: Use range instead of explicit list
   # context_range:
@@ -58,6 +38,9 @@ test:
   
   # Temperature for generation
   temperature: 0.1
+  
+  # Number of measurements per context size (results are averaged)
+  trials_per_context: 3
 
 # Book content settings
 content:
@@ -81,12 +64,6 @@ charts:
   dpi: 300
   figure_size: [16, 8]  # width, height in inches
   colors:
-    "qwen/qwen3-next-80b": "#F28E8E"        # Soft coral
-    "openai/gpt-oss-20b": "#F6C78F"         # Warm apricot  
     "openai/gpt-oss-120b": "#8FD694"        # Mint green
-    "mistralai/magistral-small-2509": "#A39CF4"  # Lavender blue
-    "qwen/qwen3-4b-2507": "#A0E7E5"        # Pastel teal
-    "glm-4.5-air-mlx": "#FFB6C1"          # Light pink
-    "qwen3-next-80b-a3b-instruct-mlx@8bit": "#DDA0DD"  # Plum
-    "qwen3-next-80b-a3b-instruct-mlx@6bit": "#FFA07A"     # Light salmon
-    "default": "#77B6EA"                  # Light sky blue
+    "mlx-community/gpt-oss-120b": "#F28E8E"  # Soft coral
+    "default": "#77B6EA"                    # Light sky blue

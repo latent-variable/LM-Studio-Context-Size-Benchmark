@@ -28,6 +28,7 @@ class BenchmarkConfig:
     context_sizes: List[int]
     max_tokens: int
     temperature: float
+    trials_per_context: int
     
     # Content settings
     book_path: str
@@ -68,6 +69,8 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
     # Filter enabled models
     enabled_models = [model for model in config_data['models'] if model.get('enabled', True)]
     
+    trials_per_context = config_data['test'].get('trials_per_context', 1)
+
     return BenchmarkConfig(
         # API settings
         api_url=config_data['api']['url'],
@@ -86,6 +89,7 @@ def load_config(config_path: str = "config.yaml") -> BenchmarkConfig:
         context_sizes=context_sizes,
         max_tokens=config_data['test']['max_tokens'],
         temperature=config_data['test']['temperature'],
+        trials_per_context=trials_per_context,
         
         # Content settings
         book_path=config_data['content']['book_path'],
@@ -123,6 +127,7 @@ def print_config_summary(config: BenchmarkConfig):
     max_tokens_display = "Unlimited" if config.max_tokens <= 0 else config.max_tokens
     print(f"   Max tokens: {max_tokens_display}")
     print(f"   Temperature: {config.temperature}")
+    print(f"   Trials per context: {config.trials_per_context}")
     print(f"   Timeout: {config.api_timeout}s")
     print()
 
@@ -143,6 +148,9 @@ def validate_config(config: BenchmarkConfig) -> List[str]:
         issues.append("No context sizes specified")
     elif any(size < 0 for size in config.context_sizes):
         issues.append("Context sizes must be non-negative")
+
+    if config.trials_per_context < 1:
+        issues.append("trials_per_context must be at least 1")
 
     # Check API URL format
     if not config.api_url.startswith(('http://', 'https://')):

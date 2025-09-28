@@ -32,6 +32,7 @@ class BenchmarkResult:
     prompt_processing_speed: float
     system_info: str
     timestamp: str
+    trials: int = 1
 
 class SmartBenchmark:
     def __init__(self, config_path="config.yaml"):
@@ -154,6 +155,8 @@ class SmartBenchmark:
             model_results = []
             first_measurement = True  # Track if this is the first measurement for this model
             
+            trials_per_context = max(1, getattr(self.config, 'trials_per_context', 1))
+
             for context_size in missing_contexts:
                 self.logger.log_info(f"🧪 Testing {model_name} @ {context_size:,} tokens")
                 
@@ -164,50 +167,71 @@ class SmartBenchmark:
                 estimated_prompt_tokens = self.book_loader.get_token_count(prompt)
                 self.logger.log_api_request(model_name, context_size, estimated_prompt_tokens)
                 
-                # Use accurate timing measurement (warmup only on first measurement)
-                result = self.timing.accurate_measurement(
-                    prompt, 
-                    model_name, 
-                    max_tokens=self.config.max_tokens,
-                    skip_warmup=not first_measurement
-                )
+                trial_results = []
                 
-                # After first measurement, skip warmup for subsequent ones
-                if first_measurement:
-                    first_measurement = False
-                
-                if result:
-                    # Create benchmark result
+                for trial_index in range(1, trials_per_context + 1):
+                    if trials_per_context > 1:
+                        self.logger.log_info(f"   ▶️ Trial {trial_index}/{trials_per_context}")
+
+                    result = self.timing.accurate_measurement(
+                        prompt,
+                        model_name,
+                        max_tokens=self.config.max_tokens,
+                        skip_warmup=not first_measurement
+                    )
+
+                    if result:
+                        trial_results.append(result)
+                    else:
+                        self.logger.log_error(
+                            f"Failed to get result for {model_name} @ {context_size:,} tokens (trial {trial_index})"
+                        )
+
+                    if first_measurement and result:
+                        first_measurement = False
+
+                    # Delay between trials/requests
+                    if self.config.delay_between_requests > 0:
+                        self.logger.log_debug(f"   Waiting {self.config.delay_between_requests}s before next request...")
+                        time.sleep(self.config.delay_between_requests)
+
+                if trial_results:
+                    aggregated = self._aggregate_trial_results(trial_results)
+                    aggregated['trials'] = len(trial_results)
+
+                    self.logger.log_info(
+                        f"   📊 Averaged over {aggregated['trials']} trial(s): "
+                        f"TTFT {aggregated['time_to_first_token']:.3f}s, "
+                        f"Generation {aggregated['tokens_per_second']:.2f} tok/s, "
+                        f"Prompt processing {aggregated['prompt_processing_speed']:.2f} tok/s"
+                    )
+
                     benchmark_result = BenchmarkResult(
                         model_name=model_name,
                         context_size=context_size,
-                        prompt_tokens=result['prompt_tokens'],
-                        completion_tokens=result['completion_tokens'],
-                        total_tokens=result['total_tokens'],
-                        time_to_first_token=result['time_to_first_token'],
-                        generation_time=result['generation_time'],
-                        total_time=result['total_time'],
-                        tokens_per_second=result['tokens_per_second'],
-                        prompt_processing_speed=result['prompt_processing_speed'],
+                        prompt_tokens=aggregated['prompt_tokens'],
+                        completion_tokens=aggregated['completion_tokens'],
+                        total_tokens=aggregated['total_tokens'],
+                        time_to_first_token=aggregated['time_to_first_token'],
+                        generation_time=aggregated['generation_time'],
+                        total_time=aggregated['total_time'],
+                        tokens_per_second=aggregated['tokens_per_second'],
+                        prompt_processing_speed=aggregated['prompt_processing_speed'],
                         system_info=self.config.system_name,
-                        timestamp=datetime.now().isoformat()
+                        timestamp=datetime.now().isoformat(),
+                        trials=aggregated['trials']
                     )
-                    
+
                     model_results.append(benchmark_result)
-                    self.logger.log_api_response(model_name, context_size, result)
+                    self.logger.log_api_response(model_name, context_size, aggregated)
 
                     # Save incrementally
                     self.save_incremental_results(model_name, [benchmark_result])
-
-                    
                 else:
-                    self.logger.log_error(f"Failed to get result for {model_name} @ {context_size:,} tokens")
-                
-                # Delay between requests
-                if self.config.delay_between_requests > 0:
-                    self.logger.log_debug(f"   Waiting {self.config.delay_between_requests}s...")
-                    time.sleep(self.config.delay_between_requests)
-            
+                    self.logger.log_error(
+                        f"No successful results recorded for {model_name} @ {context_size:,} tokens"
+                    )
+
             if model_results:
                 new_results[model_name] = model_results
                 self.logger.log_model_complete(model_name, len(model_results))
@@ -218,6 +242,49 @@ class SmartBenchmark:
                 time.sleep(self.config.delay_between_models)
         
         return new_results
+
+    def _aggregate_trial_results(self, trial_results: List[Dict]) -> Dict[str, float]:
+        """Aggregate metrics across multiple trials"""
+        count = len(trial_results)
+        if count == 0:
+            return {}
+
+        sum_prompt_tokens = sum((result.get('prompt_tokens') or 0) for result in trial_results)
+        sum_completion_tokens = sum((result.get('completion_tokens') or 0) for result in trial_results)
+        sum_total_tokens = sum((result.get('total_tokens') or 0) for result in trial_results)
+        sum_ttft = sum((result.get('time_to_first_token') or 0.0) for result in trial_results)
+        sum_generation_time = sum((result.get('generation_time') or 0.0) for result in trial_results)
+        sum_total_time = sum((result.get('total_time') or 0.0) for result in trial_results)
+
+        avg_prompt_tokens = int(round(sum_prompt_tokens / count)) if sum_prompt_tokens else 0
+        avg_completion_tokens = int(round(sum_completion_tokens / count)) if sum_completion_tokens else 0
+        avg_total_tokens = int(round(sum_total_tokens / count)) if sum_total_tokens else avg_prompt_tokens + avg_completion_tokens
+        avg_ttft = sum_ttft / count if sum_ttft else 0.0
+        avg_generation_time = sum_generation_time / count if sum_generation_time else 0.0
+        avg_total_time = sum_total_time / count if sum_total_time else 0.0
+
+        tokens_per_second = (
+            sum_completion_tokens / sum_generation_time
+            if sum_generation_time > 0
+            else 0.0
+        )
+
+        prompt_processing_speed = (
+            sum_prompt_tokens / sum_ttft
+            if sum_ttft > 0
+            else 0.0
+        )
+
+        return {
+            'prompt_tokens': avg_prompt_tokens,
+            'completion_tokens': avg_completion_tokens,
+            'total_tokens': avg_total_tokens,
+            'time_to_first_token': avg_ttft,
+            'generation_time': avg_generation_time,
+            'total_time': avg_total_time,
+            'tokens_per_second': tokens_per_second,
+            'prompt_processing_speed': prompt_processing_speed
+        }
     
     def save_incremental_results(self, model_name: str, results: List[BenchmarkResult]):
         """Save results incrementally to CSV"""
@@ -238,7 +305,8 @@ class SmartBenchmark:
                 'tokens_per_second': result.tokens_per_second,
                 'prompt_processing_speed': result.prompt_processing_speed,
                 'system_info': result.system_info,
-                'timestamp': result.timestamp
+                'timestamp': result.timestamp,
+                'trials': result.trials
             })
         
         new_df = pd.DataFrame(data)
@@ -278,7 +346,8 @@ class SmartBenchmark:
                     'tokens_per_second': result.tokens_per_second,
                     'prompt_processing_speed': result.prompt_processing_speed,
                     'system_info': result.system_info,
-                    'timestamp': result.timestamp
+                    'timestamp': result.timestamp,
+                    'trials': result.trials
                 })
             
             new_df = pd.DataFrame(data)

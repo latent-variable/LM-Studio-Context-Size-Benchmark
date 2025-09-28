@@ -1,0 +1,43 @@
+LM Studio Context Size Benchmark - Summary
+============================================================
+
+Last Updated: 2025-09-23 00:14:02
+System: M3 Max MacBook Pro 128GB RAM
+API URL: http://localhost:5002
+
+Models Tested:
+  openai/gpt-oss-120b:
+    Context sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+    Speed range: 17.88 - 63.00 tok/s
+    Data points: 7
+
+  glm-4.5-air-mlx:
+    Context sizes: [1000, 10000, 20000]
+    Speed range: 9.12 - 33.76 tok/s
+    Data points: 3
+
+  mistralai/magistral-small-2509:
+    Context sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+    Speed range: 5.12 - 17.71 tok/s
+    Data points: 7
+
+  qwen3-next-80b-a3b-instruct-mlx@8bit:
+    Context sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+    Speed range: 30.02 - 53.09 tok/s
+    Data points: 7
+
+  qwen/qwen3-4b-2507:
+    Context sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+    Speed range: 7.66 - 95.24 tok/s
+    Data points: 7
+
+  qwen/qwen3-next-80b:
+    Context sizes: [1000, 10000, 20000, 30000, 40000, 60000, 70000, 80000]
+    Speed range: 31.52 - 69.67 tok/s
+    Data points: 8
+
+  openai/gpt-oss-20b:
+    Context sizes: [1000, 10000, 20000, 40000, 60000, 70000, 80000]
+    Speed range: 23.80 - 84.05 tok/s
+    Data points: 7
+
