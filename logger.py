@@ -69,6 +69,7 @@ class BenchmarkLogger:
         self.logger.info(f"Max tokens: {max_tokens_display}")
         self.logger.info(f"Temperature: {config.temperature}")
         self.logger.info(f"Trials per context: {config.trials_per_context}")
+        self.logger.info(f"Unique trial prompts: {config.unique_trial_prompts}")
         self.logger.info(f"Timeout: {config.api_timeout}s")
         
         self.logger.info("Models to test:")

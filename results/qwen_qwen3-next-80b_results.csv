@@ -1,0 +1,3 @@
+model_name,context_size,prompt_tokens,completion_tokens,total_tokens,time_to_first_token,generation_time,total_time,tokens_per_second,prompt_processing_speed,system_info,timestamp,trials
+qwen/qwen3-next-80b,128,243,209,452,0.6882239445112646,3.402223541556547,4.090927666829278,61.33243865898354,353.08274572249013,M3 Max MacBook Pro 128GB RAM,2025-09-27T21:21:16.868626,3
+qwen/qwen3-next-80b,512,661,195,856,1.1553745837882161,2.9799769301898777,4.135796000094463,65.43674819240128,572.108828837768,M3 Max MacBook Pro 128GB RAM,2025-09-27T21:21:48.276195,3

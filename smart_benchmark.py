@@ -173,8 +173,17 @@ class SmartBenchmark:
                     if trials_per_context > 1:
                         self.logger.log_info(f"   ▶️ Trial {trial_index}/{trials_per_context}")
 
+                    prompt_variant = prompt
+                    if getattr(self.config, 'unique_trial_prompts', False):
+                        # Append metadata so each trial uses a unique prompt and cannot reuse KV cache
+                        prompt_variant = (
+                            f"{prompt}\n\n"
+                            f"[benchmark: model={model_name} context={context_size} trial={trial_index}"
+                            f" timestamp={datetime.now().isoformat()}]"
+                        )
+
                     result = self.timing.accurate_measurement(
-                        prompt,
+                        prompt_variant,
                         model_name,
                         max_tokens=self.config.max_tokens,
                         skip_warmup=not first_measurement

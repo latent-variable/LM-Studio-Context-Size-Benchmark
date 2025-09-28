@@ -22,6 +22,10 @@ models:
     enabled: true
     description: "GPT-OSS 120B MXFP4 (MLX Community)"
 
+  - name: "qwen/qwen3-next-80b"
+    enabled: true
+    description: "Qwen3 Next 80B (MLX)"
+
 # Test Configuration
 test:
   # Context sizes to test (in tokens) - Quick experiment up to 20k
@@ -41,6 +45,9 @@ test:
   
   # Number of measurements per context size (results are averaged)
   trials_per_context: 3
+
+  # When averaging, randomize each trial's prompt so KV cache can't short-cut
+  unique_trial_prompts: true
 
 # Book content settings
 content:
@@ -66,4 +73,5 @@ charts:
   colors:
     "openai/gpt-oss-120b": "#8FD694"        # Mint green
     "mlx-community/gpt-oss-120b": "#F28E8E"  # Soft coral
+    "qwen/qwen3-next-80b": "#6FA8DC"        # Cornflower blue
     "default": "#77B6EA"                    # Light sky blue
