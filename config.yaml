@@ -4,8 +4,8 @@
 api:
   url: "http://localhost:5002"
   timeout: 3600  # seconds
-  delay_between_requests: 2  # seconds
-  delay_between_models: 10  # seconds
+  delay_between_requests: 20  # seconds
+  delay_between_models: 20  # seconds
 
 # System Information
 system:
